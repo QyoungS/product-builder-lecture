@@ -172,7 +172,7 @@
     <div class="left">
       <div id="score">SCORE: 0</div>
       <div class="sub">
-        이동: <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>
+        마우스 커서로 이동하세요.
         · 일시정지: <kbd>Space</kbd>
         · 재시작: <kbd>R</kbd>
         · 테마: <kbd>T</kbd>
@@ -209,10 +209,7 @@
     let score = 0;
     let paused = false;
 
-    const keys = {};
     window.addEventListener('keydown', (e) => {
-      keys[e.code] = true;
-
       if (e.code === 'Space') {
         e.preventDefault();
         togglePause();
@@ -220,7 +217,6 @@
       if (e.code === 'KeyR') restart();
       if (e.code === 'KeyT') toggleTheme();
     });
-    window.addEventListener('keyup', (e) => keys[e.code] = false);
 
     const player = {
       x: canvas.width / 2,
@@ -331,14 +327,17 @@
     // ---------- Game Loop (time-based) ----------
     let last = performance.now();
 
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      player.x = (e.clientX - rect.left) * scaleX - player.size / 2;
+      player.y = (e.clientY - rect.top) * scaleY - player.size / 2;
+    });
+
     function update(dt) {
       // dt in seconds
       const move = player.speed * dt;
-
-      if (keys['ArrowUp']) player.y -= move;
-      if (keys['ArrowDown']) player.y += move;
-      if (keys['ArrowLeft']) player.x -= move;
-      if (keys['ArrowRight']) player.x += move;
 
       // clamp to canvas
       player.x = clamp(player.x, 0, canvas.width - player.size);
