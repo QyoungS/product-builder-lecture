@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Neon Game (Light/Dark)</title>
+
+  <style>
+    :root {
+      /* Dark default */
+      --bg: #050505;
+      --panel: rgba(255,255,255,0.06);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.70);
+      --accent: #38bdf8;
+      --danger: #fb7185;
+      --canvas-bg: #000000;
+      --border: rgba(56,189,248,0.7);
+      --shadow: rgba(56,189,248,0.3);
+    }
+
+    /* Light theme overrides */
+    [data-theme="light"] {
+      --bg: #f7f8fb;
+      --panel: rgba(0,0,0,0.06);
+      --text: #0f172a;
+      --muted: rgba(15,23,42,0.65);
+      --accent: #0284c7;
+      --danger: #e11d48;
+      --canvas-bg: #ffffff;
+      --border: rgba(2,132,199,0.55);
+      --shadow: rgba(2,132,199,0.25);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(900px 600px at 60% 15%, rgba(56,189,248,0.15), transparent 55%),
+                  radial-gradient(850px 550px at 20% 80%, rgba(251,113,133,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Inter", "Noto Sans KR", Arial, sans-serif;
+      gap: 12px;
+    }
+
+    .info {
+      width: min(720px, 92vw);
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    #score {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.2px;
+    }
+
+    .sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.10);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 650;
+      transition: transform .05s ease, border-color .15s ease, background .15s ease;
+      user-select: none;
+    }
+    [data-theme="light"] .btn {
+      background: rgba(255,255,255,0.55);
+      border-color: rgba(15,23,42,0.12);
+    }
+    .btn:hover { border-color: rgba(255,255,255,0.30); }
+    [data-theme="light"] .btn:hover { border-color: rgba(15,23,42,0.22); }
+    .btn:active { transform: translateY(1px); }
+
+    .pill {
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--muted);
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    [data-theme="light"] .pill { border-color: rgba(15,23,42,0.12); }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--shadow);
+    }
+
+    canvas {
+      width: min(720px, 92vw);
+      height: calc(min(720px, 92vw) * 0.62);
+      max-height: 72vh;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 0 22px var(--shadow);
+      background: var(--canvas-bg);
+      cursor: none;
+    }
+
+    .hint {
+      width: min(720px, 92vw);
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.18);
+      color: var(--text);
+    }
+    [data-theme="light"] kbd {
+      border-color: rgba(15,23,42,0.16);
+      background: rgba(255,255,255,0.65);
+      color: var(--text);
+    }
+  </style>
+</head>
+
+<body data-theme="dark">
+  <div class="info">
+    <div class="left">
+      <div id="score">SCORE: 0</div>
+      <div class="sub">
+        이동: <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>
+        · 일시정지: <kbd>Space</kbd>
+        · 재시작: <kbd>R</kbd>
+        · 테마: <kbd>T</kbd>
+      </div>
+    </div>
+    <div class="right">
+      <span class="pill"><span class="dot"></span><span id="statusText">RUNNING</span></span>
+      <button class="btn" id="themeBtn">🌙 Dark</button>
+      <button class="btn" id="restartBtn">Restart</button>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas" width="720" height="450"></canvas>
+  <div class="hint">
+    목표(핑크)를 먹으면 점수가 오르고 속도가 증가합니다. 짧은 시간 안에 연속으로 먹으면 콤보 보너스가 있습니다.
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+    const themeBtn = document.getElementById('themeBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const statusText = document.getElementById('statusText');
+
+    const root = document.body;
+
+    // ---------- Utilities ----------
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const dist = (x1, y1, x2, y2) => Math.hypot(x1 - x2, y1 - y2);
+
+    // ---------- Game state ----------
+    let score = 0;
+    let paused = false;
+
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePause();
+      }
+      if (e.code === 'KeyR') restart();
+      if (e.code === 'KeyT') toggleTheme();
+    });
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      size: 22,
+      speed: 260, // px/s (time-based)
+      color: () => getCssVar('--accent'),
+    };
+
+    const target = {
+      x: 0, y: 0,
+      size: 9,
+      color: () => getCssVar('--danger'),
+      pulse: 0
+    };
+
+    // combo
+    let combo = 0;
+    let lastEatTime = 0; // ms
+
+    // screen shake
+    let shake = 0;
+
+    // particles
+    const particles = [];
+    function spawnParticles(x, y, baseColor, count = 18) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x, y,
+          vx: rand(-180, 180),
+          vy: rand(-180, 180),
+          r: rand(1.5, 4),
+          life: rand(0.4, 0.9),
+          t: 0,
+          color: baseColor
+        });
+      }
+    }
+
+    function getCssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function placeTargetSafe() {
+      const margin = 28;
+      let tx, ty;
+      let tries = 0;
+      do {
+        tx = rand(margin, canvas.width - margin);
+        ty = rand(margin, canvas.height - margin);
+        tries++;
+        if (tries > 100) break;
+      } while (dist(tx, ty, player.x + player.size/2, player.y + player.size/2) < 120);
+      target.x = tx;
+      target.y = ty;
+    }
+
+    // ---------- Theme ----------
+    function toggleTheme() {
+      const current = root.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+
+      themeBtn.textContent = next === 'dark' ? '🌙 Dark' : '☀️ Light';
+
+      // reset background alpha based on theme (잔상 정도)
+      trailAlpha = next === 'dark' ? 0.20 : 0.14;
+    }
+
+    // ---------- Pause / Restart ----------
+    function togglePause() {
+      paused = !paused;
+      statusText.textContent = paused ? 'PAUSED' : 'RUNNING';
+    }
+
+    function restart() {
+      score = 0;
+      combo = 0;
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
+      player.speed = 260;
+      particles.length = 0;
+      shake = 0;
+      lastEatTime = 0;
+      paused = false;
+      statusText.textContent = 'RUNNING';
+      updateScoreText();
+      placeTargetSafe();
+    }
+
+    restartBtn.addEventListener('click', restart);
+    themeBtn.addEventListener('click', toggleTheme);
+
+    // ---------- Rendering settings ----------
+    let trailAlpha = 0.20; // 잔상 정도
+    function clearWithTrail() {
+      ctx.fillStyle = `rgba(0, 0, 0, ${trailAlpha})`;
+
+      // 라이트 테마일 때 잔상 배경이 검게 남는 게 싫으면 "캔버스 배경색"에 맞추기:
+      // 아래처럼 현재 canvas background가 흰색일 때는 흰색 잔상 사용
+      const theme = root.getAttribute('data-theme');
+      if (theme === 'light') {
+        ctx.fillStyle = `rgba(255, 255, 255, ${trailAlpha})`;
+      }
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // ---------- Game Loop (time-based) ----------
+    let last = performance.now();
+
+    function update(dt) {
+      // dt in seconds
+      const move = player.speed * dt;
+
+      if (keys['ArrowUp']) player.y -= move;
+      if (keys['ArrowDown']) player.y += move;
+      if (keys['ArrowLeft']) player.x -= move;
+      if (keys['ArrowRight']) player.x += move;
+
+      // clamp to canvas
+      player.x = clamp(player.x, 0, canvas.width - player.size);
+      player.y = clamp(player.y, 0, canvas.height - player.size);
+
+      // target pulse
+      target.pulse += dt * 6;
+
+      // collision
+      const px = player.x + player.size / 2;
+      const py = player.y + player.size / 2;
+
+      const d = dist(px, py, target.x, target.y);
+      if (d < player.size / 2 + target.size) {
+        const now = performance.now();
+        const withinCombo = (now - lastEatTime) < 1200; // 1.2s
+        combo = withinCombo ? combo + 1 : 1;
+        lastEatTime = now;
+
+        const bonus = Math.min(1 + (combo - 1) * 0.35, 2.4); // up to 2.4x
+        const add = Math.round(10 * bonus);
+        score += add;
+
+        // difficulty
+        player.speed += 14; // px/s 증가
+
+        updateScoreText();
+
+        // effects
+        spawnParticles(target.x, target.y, target.color(), 22);
+        shake = Math.min(shake + 8, 18);
+
+        placeTargetSafe();
+      }
+
+      // particles update
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.t += dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= 0.94;
+        p.vy *= 0.94;
+
+        if (p.t >= p.life) particles.splice(i, 1);
+      }
+
+      // shake decay
+      shake *= 0.90;
+    }
+
+    function updateScoreText() {
+      const comboText = combo >= 2 ? `  (COMBO x${combo})` : '';
+      scoreElement.textContent = `SCORE: ${score}${comboText}`;
+    }
+
+    function draw() {
+      // screen shake
+      const sx = (Math.random() - 0.5) * shake;
+      const sy = (Math.random() - 0.5) * shake;
+
+      ctx.save();
+      ctx.translate(sx, sy);
+
+      clearWithTrail();
+
+      // target (glow + pulse)
+      const pulse = 1 + Math.sin(target.pulse) * 0.12;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = target.color();
+      ctx.fillStyle = target.color();
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.size * pulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // particles
+      for (const p of particles) {
+        const a = 1 - (p.t / p.life);
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = p.color;
+        ctx.globalAlpha = a;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // player
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = player.color();
+      ctx.fillStyle = player.color();
+      ctx.fillRect(player.x, player.y, player.size, player.size);
+
+      // pause overlay
+      if (paused) {
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        if (root.getAttribute('data-theme') === 'light') {
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        }
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = root.getAttribute('data-theme') === 'light' ? '#0f172a' : '#ffffff';
+        ctx.font = '700 34px ui-sans-serif, system-ui, -apple-system, "Noto Sans KR"';
+        ctx.textAlign = 'center';
+        ctx.fillText('PAUSED', canvas.width/2, canvas.height/2 - 10);
+
+        ctx.font = '500 14px ui-sans-serif, system-ui, -apple-system, "Noto Sans KR"';
+        ctx.fillStyle = root.getAttribute('data-theme') === 'light' ? 'rgba(15,23,42,0.75)' : 'rgba(255,255,255,0.75)';
+        ctx.fillText('Press SPACE to resume', canvas.width/2, canvas.height/2 + 20);
+      }
+
+      ctx.restore();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    function loop(now) {
+      const dt = (now - last) / 1000;
+      last = now;
+
+      if (!paused) update(Math.min(dt, 0.05));
+      draw();
+
+      requestAnimationFrame(loop);
+    }
+
+    // start
+    toggleTheme(); // light로 시작하고 싶으면 이 줄을 활성화/비활성화로 조절
+    // 위 줄을 켜두면 첫 로드에서 light로 전환됨. dark 시작이면 위 줄을 지우세요.
+
+    restart();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
