@@ -172,7 +172,7 @@
     <div class="left">
       <div id="score">SCORE: 0</div>
       <div class="sub">
-        이동: <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>
+        이동: 마우스
         · 일시정지: <kbd>Space</kbd>
         · 재시작: <kbd>R</kbd>
         · 테마: <kbd>T</kbd>
@@ -201,7 +201,6 @@
     const root = document.body;
 
     // ---------- Utilities ----------
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const rand = (a, b) => a + Math.random() * (b - a);
     const dist = (x1, y1, x2, y2) => Math.hypot(x1 - x2, y1 - y2);
 
@@ -209,10 +208,16 @@
     let score = 0;
     let paused = false;
 
-    const keys = {};
-    window.addEventListener('keydown', (e) => {
-      keys[e.code] = true;
+    const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      mouse.x = (e.clientX - rect.left) * scaleX;
+      mouse.y = (e.clientY - rect.top) * scaleY;
+    });
 
+    window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
         togglePause();
@@ -220,7 +225,6 @@
       if (e.code === 'KeyR') restart();
       if (e.code === 'KeyT') toggleTheme();
     });
-    window.addEventListener('keyup', (e) => keys[e.code] = false);
 
     const player = {
       x: canvas.width / 2,
@@ -333,16 +337,14 @@
 
     function update(dt) {
       // dt in seconds
-      const move = player.speed * dt;
-
-      if (keys['ArrowUp']) player.y -= move;
-      if (keys['ArrowDown']) player.y += move;
-      if (keys['ArrowLeft']) player.x -= move;
-      if (keys['ArrowRight']) player.x += move;
-
-      // clamp to canvas
-      player.x = clamp(player.x, 0, canvas.width - player.size);
-      player.y = clamp(player.y, 0, canvas.height - player.size);
+      // Move player towards mouse
+      const dx = mouse.x - player.x - player.size / 2;
+      const dy = mouse.y - player.y - player.size / 2;
+      const angle = Math.atan2(dy, dx);
+      
+      const speed = player.speed * dt;
+      player.x += Math.cos(angle) * speed;
+      player.y += Math.sin(angle) * speed;
 
       // target pulse
       target.pulse += dt * 6;
