@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>제휴 문의</title>
+  <style>
+    :root {
+      /* Dark default */
+      --bg: #050505;
+      --panel: rgba(255,255,255,0.06);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.70);
+      --accent: #38bdf8;
+      --danger: #fb7185;
+      --canvas-bg: #000000;
+      --border: rgba(56,189,248,0.7);
+      --shadow: rgba(56,189,248,0.3);
+    }
+
+    /* Light theme overrides */
+    [data-theme="light"] {
+      --bg: #f7f8fb;
+      --panel: rgba(0,0,0,0.06);
+      --text: #0f172a;
+      --muted: rgba(15,23,42,0.65);
+      --accent: #0284c7;
+      --danger: #e11d48;
+      --canvas-bg: #ffffff;
+      --border: rgba(2,132,199,0.55);
+      --shadow: rgba(2,132,199,0.25);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(900px 600px at 60% 15%, rgba(56,189,248,0.15), transparent 55%),
+                  radial-gradient(850px 550px at 20% 80%, rgba(251,113,133,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Inter", "Noto Sans KR", Arial, sans-serif;
+      gap: 12px;
+      padding: 20px;
+    }
+
+    .container {
+      width: min(720px, 92vw);
+      padding: 24px;
+      border-radius: 16px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.10);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      width: 100%;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(0,0,0,0.20);
+    }
+    [data-theme="light"] input[type="text"],
+    [data-theme="light"] input[type="email"],
+    [data-theme="light"] textarea {
+      background: rgba(255,255,255,0.55);
+      border-color: rgba(15,23,42,0.12);
+      color: var(--text);
+    }
+    [data-theme="light"] input[type="text"]:focus,
+    [data-theme="light"] input[type="email"]:focus,
+    [data-theme="light"] textarea:focus {
+      background: rgba(255,255,255,0.8);
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button[type="submit"] {
+      background: var(--accent);
+      color: var(--text);
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s ease, transform .05s ease;
+      align-self: center;
+      width: fit-content;
+    }
+    button[type="submit"]:hover {
+      background: #0ea5e9; /* Slightly darker accent */
+    }
+    button[type="submit"]:active {
+      transform: translateY(1px);
+    }
+
+    .back-link {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .back-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="container">
+    <h1>제휴 문의</h1>
+    <form action="https://formspree.io/f/mykkgdgq" method="POST">
+      <div class="form-group">
+        <label for="name">이름:</label>
+        <input type="text" id="name" name="name" required />
+      </div>
+      <div class="form-group">
+        <label for="email">이메일:</label>
+        <input type="email" id="email" name="email" required />
+      </div>
+      <div class="form-group">
+        <label for="message">문의 내용:</label>
+        <textarea id="message" name="message" required></textarea>
+      </div>
+      <button type="submit">보내기</button>
+    </form>
+  </div>
+  <div class="back-link">
+    <a href="index.html">메인 게임으로 돌아가기</a>
+  </div>
+</body>
+</html>

@@ -139,7 +139,6 @@
       border-radius: 16px;
       box-shadow: 0 0 22px var(--shadow);
       background: var(--canvas-bg);
-      cursor: none;
     }
 
     .hint {
@@ -181,7 +180,7 @@
     <div class="left">
       <div id="score">SCORE: 0</div>
       <div class="sub">
-        마우스 커서로 이동하세요.
+        이동: 마우스 클릭
         · 일시정지: <kbd>Space</kbd>
         · 재시작: <kbd>R</kbd>
         · 테마: <kbd>T</kbd>
@@ -191,6 +190,7 @@
       <span class="pill"><span class="dot"></span><span id="statusText">RUNNING</span></span>
       <button class="btn" id="themeBtn">🌙 Dark</button>
       <button class="btn" id="restartBtn">Restart</button>
+      <a href="contact.html" class="btn">문의하기</a>
     </div>
   </div>
 
@@ -210,13 +210,43 @@
     const root = document.body;
 
     // ---------- Utilities ----------
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const rand = (a, b) => a + Math.random() * (b - a);
     const dist = (x1, y1, x2, y2) => Math.hypot(x1 - x2, y1 - y2);
 
     // ---------- Game state ----------
     let score = 0;
     let paused = false;
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      const d = dist(clickX, clickY, target.x, target.y);
+      if (d < target.size) {
+        const now = performance.now();
+        const withinCombo = (now - lastEatTime) < 1200; // 1.2s
+        combo = withinCombo ? combo + 1 : 1;
+        lastEatTime = now;
+
+        const bonus = Math.min(1 + (combo - 1) * 0.35, 2.4); // up to 2.4x
+        const add = Math.round(10 * bonus);
+        score += add;
+
+        // difficulty
+        player.speed += 14; // px/s 증가
+
+        updateScoreText();
+
+        // effects
+        spawnParticles(target.x, target.y, target.color(), 22);
+        shake = Math.min(shake + 8, 18);
+
+        placeTargetSafe();
+      }
+    });
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
@@ -336,51 +366,12 @@
     // ---------- Game Loop (time-based) ----------
     let last = performance.now();
 
-    canvas.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      player.x = (e.clientX - rect.left) * scaleX - player.size / 2;
-      player.y = (e.clientY - rect.top) * scaleY - player.size / 2;
-    });
-
     function update(dt) {
       // dt in seconds
-      const move = player.speed * dt;
-
-      // clamp to canvas
-      player.x = clamp(player.x, 0, canvas.width - player.size);
-      player.y = clamp(player.y, 0, canvas.height - player.size);
+      // Player is stationary
 
       // target pulse
       target.pulse += dt * 6;
-
-      // collision
-      const px = player.x + player.size / 2;
-      const py = player.y + player.size / 2;
-
-      const d = dist(px, py, target.x, target.y);
-      if (d < player.size / 2 + target.size) {
-        const now = performance.now();
-        const withinCombo = (now - lastEatTime) < 1200; // 1.2s
-        combo = withinCombo ? combo + 1 : 1;
-        lastEatTime = now;
-
-        const bonus = Math.min(1 + (combo - 1) * 0.35, 2.4); // up to 2.4x
-        const add = Math.round(10 * bonus);
-        score += add;
-
-        // difficulty
-        player.speed += 14; // px/s 증가
-
-        updateScoreText();
-
-        // effects
-        spawnParticles(target.x, target.y, target.color(), 22);
-        shake = Math.min(shake + 8, 18);
-
-        placeTargetSafe();
-      }
 
       // particles update
       for (let i = particles.length - 1; i >= 0; i--) {
@@ -436,10 +427,10 @@
       ctx.globalAlpha = 1;
 
       // player
-      ctx.shadowBlur = 16;
-      ctx.shadowColor = player.color();
-      ctx.fillStyle = player.color();
-      ctx.fillRect(player.x, player.y, player.size, player.size);
+      // ctx.shadowBlur = 16;
+      // ctx.shadowColor = player.color();
+      // ctx.fillStyle = player.color();
+      // ctx.fillRect(player.x, player.y, player.size, player.size);
 
       // pause overlay
       if (paused) {
@@ -453,7 +444,7 @@
         ctx.fillStyle = root.getAttribute('data-theme') === 'light' ? '#0f172a' : '#ffffff';
         ctx.font = '700 34px ui-sans-serif, system-ui, -apple-system, "Noto Sans KR"';
         ctx.textAlign = 'center';
-        ctx.fillText('PAUSED', canvas.width/2, canvas.height/2 - 10);
+        ctx.fillText('PAUSED', canvas.w_idth/2, canvas.height/2 - 10);
 
         ctx.font = '500 14px ui-sans-serif, system-ui, -apple-system, "Noto Sans KR"';
         ctx.fillStyle = root.getAttribute('data-theme') === 'light' ? 'rgba(15,23,42,0.75)' : 'rgba(255,255,255,0.75)';
