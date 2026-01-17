@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Neon Game (Light/Dark)</title>
+  <title>네온 게임 - 짜릿한 스피드의 아케이드 게임</title>
+  <meta name="description" content="마우스를 클릭하여 빠르게 목표를 없애고 최고 점수에 도전하세요. 간단하지만 중독성 있는 네온 스타일의 아케이드 게임입니다.">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "네온 게임",
+      "description": "마우스를 클릭하여 빠르게 목표를 없애고 최고 점수에 도전하는 간단하지만 중독성 있는 네온 스타일의 아케이드 게임입니다.",
+      "operatingSystem": "Any",
+      "applicationCategory": "Game",
+      "playMode": "SinglePlayer"
+    }
+  </script>
 
   <style>
     :root {
@@ -202,7 +214,7 @@
     </div>
   </div>
 
-  <canvas id="gameCanvas" width="720" height="450"></canvas>
+  <canvas id="gameCanvas" width="720" height="450" aria-label="네온 게임 스크린"></canvas>
   <div class="hint">
     목표(핑크)를 먹으면 점수가 오르고 속도가 증가합니다. 짧은 시간 안에 연속으로 먹으면 콤보 보너스가 있습니다.
   </div>
